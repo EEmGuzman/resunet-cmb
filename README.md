@@ -1,5 +1,5 @@
 # ResUNet-CMB
-This repository contains the implementation of the ResUNet-CMB convolutional neural network from the paper [Reconstructing Patchy Reionization with Deep Learning](https://arxiv.org/). The ResUNet-CMB network is designed for the simultaneous reconstruction of the lensing convergence, patchy reionization, and primordial E-mode polarization CMB maps from input modulated and lensed Q and U polarization maps.
+This repository contains the implementation of the ResUNet-CMB convolutional neural network from the paper [Reconstructing Patchy Reionization with Deep Learning](https://arxiv.org/abs/2101.01214). The ResUNet-CMB network is designed for the simultaneous reconstruction of the lensing convergence, patchy reionization, and primordial E-mode polarization CMB maps from input modulated and lensed Q and U polarization maps.
 
 This repository contains code for the production of the CMB simulations used for training and making predictions (data pipeline) and the code used for training the network.
 

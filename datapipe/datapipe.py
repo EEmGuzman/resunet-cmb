@@ -213,7 +213,7 @@ def qest_recon_map(cmbmap_opts, gmaps, pol=True, est='EB'):
     return recon
 
 
-def get_mlmaps(gmaps, qest_recon_map=None, incltau=False):
+def get_mlmaps(gmaps, qest_recon_map=None, incltau=False, inclcbfringe=False):
     """
     Converts maps produced from get_flsims_maps into numpy arrays.
 
@@ -235,40 +235,35 @@ def get_mlmaps(gmaps, qest_recon_map=None, incltau=False):
         for treatment as image data.
     """
 
-    # flipping for (y,x) pairs
-    q_unl = np.asarray(np.flipud(gmaps["unlensed"][1]))
-    u_unl = np.asarray(np.flipud(gmaps["unlensed"][2]))
-    t_unl = np.asarray(np.flipud(gmaps["unlTEB"][0]))
-    e_unl = np.asarray(np.flipud(gmaps["unlTEB"][1]))
-    b_unl = np.asarray(np.flipud(gmaps["unlTEB"][2]))
-    q_len = np.asarray(np.flipud(gmaps["observed"][1]))
-    u_len = np.asarray(np.flipud(gmaps["observed"][2]))
-    t_len = np.asarray(np.flipud(gmaps["lenTEB"][0]))
-    e_len = np.asarray(np.flipud(gmaps["lenTEB"][1]))
-    b_len = np.asarray(np.flipud(gmaps["lenTEB"][2]))
-    kappa_tru = np.asarray(np.flipud(gmaps["kappa"]))
-    phi_tru = np.asarray(np.flipud(gmaps["phi"]))
+    gmap_keys = ("primordial", "primTEB", "observed", "obsTEB", "kappa", "phi")
+    emap_keys = ('i_prim', 'q_prim', 'u_prim', 't_prim','e_prim', 'b_prim',
+                'i_obs', 'q_obs', 'u_obs', 't_obs', 'e_obs', 'b_obs', 'tru_kappa',
+                'tru_phi')
 
-    amaps = {
-        'q_unl':q_unl, 'u_unl':u_unl,
-        't_unl':t_unl, 'e_unl':e_unl,
-        'b_unl':b_unl, 'q_len':q_len,
-        'u_len':u_len, 't_len':t_len,
-        'e_len':e_len, 'b_len':b_len,
-        'tru_kappa':kappa_tru, 'tru_phi':phi_tru}
+    everymap = {}
+    emap_kcounter = 0
+    for key in gmap_keys:
+        dstructure_shape = np.shape(gmaps[key])
+        if len(dstructure_shape) == 2:
+            everymap[emap_keys[emap_kcounter]] = np.asarray(np.flipud(gmaps[key]))
+            emap_kcounter += 1
+        else:
+            for l in np.arange(dstructure_shape[0]):
+                everymap[emap_keys[emap_kcounter]] = np.asarray(np.flipud(gmaps[key][l]))
+                emap_kcounter += 1
 
     if qest_recon_map is not None:
-        recon_phi = np.asarray(np.flipud(qest_recon_map['recon_phi']))
-        recon_kappa = np.asarray(np.flipud(qest_recon_map['recon_kappa']))
-        wf_recon_kappa = np.asarray(np.flipud(qest_recon_map['wf_recon_kappa']))
-        amaps['rec_kappa'] = recon_kappa
-        amaps['rec_phi'] = recon_phi
-        amaps['wf_rec_kappa'] = wf_recon_kappa
+        everymap['rec_phi'] = np.asarray(np.flipud(qest_recon_map['recon_phi']))
+        everymap['rec_kappa'] = np.asarray(np.flipud(qest_recon_map['recon_kappa']))
+        everymap['wf_rec_kappa'] = np.asarray(np.flipud(qest_recon_map['wf_recon_kappa']))
 
     if incltau:
-        tau_tru = np.asarray(np.flipud(gmaps["tau_map"]))
-        amaps["tru_tau"] = tau_tru
-    return amaps
+        everymap["tru_tau"] = np.asarray(np.flipud(gmaps["tau_map"]))
+
+    
+    if inclcbfringe:
+        everymap["tru_cbfringe"] = np.asarray(np.flipud(gmaps["cbfringe_map"]))
+    return everymap
 
 def create_map_sets(msett_obj, cmbmaps, number, beam_am=0, noise_uk_am=0, incl_tau=False, kappa_ps_fac=1, seed_kappa=None, seed_tau=None):
     """

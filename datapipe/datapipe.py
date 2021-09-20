@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d
 from orphics import maps, io, stats, cosmology, lensing
 from pixell import enmap as penmap
 
-class msett:
+class SimSetupCMB:
     """
     A class used as a container for information needed for producing CMB
     simulations
@@ -265,7 +265,10 @@ def get_mlmaps(gmaps, qest_recon_map=None, incltau=False, inclcbfringe=False):
         everymap["tru_cbfringe"] = np.asarray(np.flipud(gmaps["cbfringe_map"]))
     return everymap
 
-def create_map_sets(msett_obj, cmbmaps, number, beam_am=0, noise_uk_am=0, incl_tau=False, kappa_ps_fac=1, seed_kappa=None, seed_tau=None):
+def create_map_sets(SimSetupCMB_obj, cmbmaps, numbmaps, patchy_tau_vals=None , patchy_tau_ells=None,
+                    beam_am=0, noise_uk_am=0, incl_tau=False, incl_cbfringe=False, kappa_ps_fac=1,
+                    seed_kappa=None, seed_tau=None, seed_cbfringe=None, alpha_ps_vals=None, alpha_ps_ells=None):
+    init_image_shape = (numbmaps,) + SimSetupCMB_obj.shape[-2:]
     """
     Creates an image data set of CMB simulations.
 
@@ -302,14 +305,12 @@ def create_map_sets(msett_obj, cmbmaps, number, beam_am=0, noise_uk_am=0, incl_t
         Numpy array of CMB maps that is saved to working directory. Maps saved
         are from the cmbmaps list and are float32.
     """
-    # class object of map options to be used for simulations
-    mset_opts = msett_obj
 
-    poss_maps = [
-            't_len', 'q_len', 'u_len', 'e_len', 'b_len',
-            't_unl', 'q_unl', 'u_unl', 'e_unl', 'b_unl',
+    poss_maps = (
+            't_obs', 'q_obs', 'u_obs', 'e_obs', 'b_obs',
+            't_prim', 'q_prim', 'u_prim', 'e_prim', 'b_prim',
             'tru_kappa', 'tru_phi', 'rec_kappa', 'rec_phi',
-            'wf_rec_kappa', 'tru_tau']
+            'wf_rec_kappa', 'tru_tau', 'tru_cbfringe')
 
     final_maps = {}
     window_vals = {}
@@ -317,34 +318,43 @@ def create_map_sets(msett_obj, cmbmaps, number, beam_am=0, noise_uk_am=0, incl_t
         if i not in poss_maps:
             raise Exception('Map {} is not available or in the incorrect format'.format(i))
         else:
-            final_maps[i] = []
+            final_maps[i] = np.zeros(init_image_shape, dtype=np.float32)
+    
+    if not(incl_tau):
+        assert 'tru_tau' not in final_maps, "Remove 'tru_tau' from list of maps to save."
 
-    for l in np.arange(0, number):
-
+    # generating maps and saving them
+    for l in np.arange(0, numbmaps):
+        # Including 'Null" in 20% of "numbmaps" set.
         if np.random.random() < 0.8:
-            cltautau = mset_opts.tautauTheorycl(def_ttau_vals, def_ttau_els, 2, 9000)
-            flsims = mset_opts.flat_lens_sim(beam_arcmin=beam_am, noise_uk_arcmin=noise_uk_am, incl_tau=mset_opts.cltautau, kappa_ps_fac=kappa_ps_fac)
+            tau_ps_fac = 1.0
+            finkappa_ps_fac = kappa_ps_fac
+            alpha_ps_fac = 1.0
         else:
-            cltautau = mset_opts.tautauTheorycl(def_ttau_vals * 0.0, def_ttau_els, 2, 9000)
-            flsims = mset_opts.flat_lens_sim(beam_arcmin=beam_am, noise_uk_arcmin=noise_uk_am, incl_tau=mset_opts.cltautau, kappa_ps_fac=0.0)
-        gmaps = get_flsims_maps(mset_opts, flsims, incltau=incl_tau, seed_kappa=seed_kappa, seed_tau=seed_tau)
-        recon = qest_recon_map(mset_opts, gmaps, est='EB')
-        amaps = get_mlmaps(gmaps, qest_recon_map=recon, incltau=incl_tau)
+            tau_ps_fac = 1.0
+            finkappa_ps_fac = 1.0
+            alpha_ps_fac = 0.0
+
+        if incl_tau:
+            cltautau = SimSetupCMB_obj.tautauTheorycl(patchy_tau_vals * tau_ps_fac, patchy_tau_ells, 2, 9000)
+        if incl_cbfringe:
+            clalpha = SimSetupCMB_obj.cbfringeTheorycl(alpha_ps_vals * alpha_ps_fac, alpha_ps_ells, 2, 9000)
+        flsims = SimSetupCMB_obj.flat_lens_sim(beam_arcmin=beam_am, noise_uk_arcmin=noise_uk_am, incl_tau=incl_tau, kappa_ps_fac=finkappa_ps_fac, incl_cbfringe=incl_cbfringe)
+        gmaps = get_flsims_maps(SimSetupCMB_obj, flsims, incltau=incl_tau, inclcbfringe=incl_cbfringe, seed_kappa=seed_kappa, seed_tau=seed_tau, seed_cbf=seed_cbfringe)
+        #recon = qest_recon_map(SimSetupCMB_obj, gmaps, est='EB')
+        everymap = get_mlmaps(gmaps, qest_recon_map=None, incltau=incl_tau, inclcbfringe=incl_cbfringe)
 
         for i in cmbmaps:
-            init_map = amaps[i]
+            init_map = everymap[i]
 
             # saving first couple of maps to serve as a check on data quality
             if l < 3:
                 np.save('map_{}_{}'.format(i,l), init_map)
-
-            final_maps[i].append(init_map)
-
-    for i in cmbmaps:
-        final_maps[i] = np.asarray(final_maps[i], dtype=np.float32)
-
-    window_vals['taper'] = np.asarray(mset_opts.taper)
-    window_vals['w2'] = np.asarray(mset_opts.w2)
+    
+            final_maps[i][l] = init_map.astype(np.float32)
+    # saving taper and w2 for window correction
+    window_vals['taper'] = np.asarray(SimSetupCMB_obj.taper)
+    window_vals['w2'] = np.asarray(SimSetupCMB_obj.w2)
 
     np.savez('window_info', **window_vals)
     np.savez('map_sets32', **final_maps)

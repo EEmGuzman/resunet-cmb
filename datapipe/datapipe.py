@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # Produces various CMB map realizations. Requires orphics package installation
 # with all associated dependencies.
 
@@ -83,7 +83,7 @@ class SimSetupCMB:
         self.theory.loadGenericCls(lvals, self.clalphalpha, 'alphalpha', lpad=9000)
         return self.clalphalpha 
 
-    def flat_lens_sim(self, beam_arcmin=0, noise_uk_arcmin=0, noisep="default", pol=True, incl_tau=None, kappa_ps_fac=1):
+    def flat_lens_sim(self, beam_arcmin=0, noise_uk_arcmin=0, noisep="default", pol=True, incl_tau=False, kappa_ps_fac=1, incl_cbfringe=False):
         """
         Creates orphics object used to produce flat-sky simulations.
 
@@ -107,7 +107,7 @@ class SimSetupCMB:
 
         flsims = lensing.FlatLensingSims(
                 self.shape, self.wcs, self.theory, beam_arcmin, noise_uk_arcmin,
-                noise_e_uk_arcmin=noisep, noise_b_uk_arcmin=noisep, pol=pol, fixed_lens_kappa=None, tautauspec=incl_tau, kappa_ps_fac=kappa_ps_fac)
+                noise_e_uk_arcmin=noisep, noise_b_uk_arcmin=noisep, pol=pol, fixed_lens_kappa=None, incl_tau=incl_tau, kappa_ps_fac=kappa_ps_fac, incl_cbfringe=incl_cbfringe)
 
         # for use in quadratic estimators
         self.n2d = np.nan_to_num(flsims.ps_noise[0,0])
@@ -196,7 +196,7 @@ def qest_recon_map(cmbmap_opts, gmaps, pol=True, est='EB'):
         grad_cut=None, unlensed_equals_lensed=False, bigell=9000)
 
     # FFT power spectra
-    pTEB, kmapTEB1, kmapTEB2 = cmbmap_opts.fc.power2d(gmaps['observed'])
+    kmapTEB, kmapTEB1, kmapTEB2 = cmbmap_opts.fc.power2d(gmaps['observed'])
 
     unf_recon_kappa = qest.kappa_from_map(est, kmapTEB1[0], kmapTEB1[1], kmapTEB1[2], alreadyFTed=True)
     recon_phi, _ = lensing.kappa_to_phi(unf_recon_kappa, cmbmap_opts.modlmap, return_fphi=True)

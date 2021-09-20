@@ -364,14 +364,22 @@ if __name__ == "__main__":
 
     np.random.seed(1225)
 
-    cmbmaps = ['q_len', 'u_len', 'q_unl', 'u_unl', 'e_unl', 'tru_kappa', 'rec_kappa', 'tru_phi', 'rec_phi', 'wf_rec_kappa', 'tru_tau', 't_len', 't_unl']
+    cmbmaps = ['q_obs', 'u_obs', 'q_prim', 'u_prim', 'e_prim', 't_obs',
+               'tru_kappa', 'tru_phi', 'tru_tau', 't_prim', 'tru_cbfringe']
     datadir = '../data/camb_spectra/planck_wp_highL/planck_lensing_wp_highL_bestFit_20130627'
 
-    def_ttau_els = np.array([2.0, 70.0, 170.0, 270.0, 370.0, 470.0, 570.0, 670.0, 770.0, 870.0, 970.0, 1070.0, 1170.0, 1270.0, 1370.0, 1470.0, 1570.0, 1670.0, 1770.0, 1870.0, 1970.0, 2500.0, 3000.0, 4000.0, 4500.0, 5000.0, 6000.0, 7000.0, 8000.0, 9000.0, 10000.0])
-    def_ttau_vals = np.array([2.0e-10, 1.3e-6, 4.9e-6, 7.2e-6, 8.5e-6, 8.9e-6, 8.6e-6, 8.2e-6, 7.9e-6, 7.4e-6, 6.8e-6, 6.1e-6, 5.7e-6, 5.1e-6, 4.8e-6, 4.3e-6, 4e-6, 3.7e-6, 3.4e-6, 3.0e-6, 2.8e-6, 1.8e-6, 1.2e-6, 5e-7, 3.3e-7, 2.2e-7, 9e-8, 4e-8, 1.7e-8, 7e-9, 3e-9])
-    def_ttau_vals *= 1.0
+    ttau_ells = np.array([2.0, 70.0, 170.0, 270.0, 370.0, 470.0, 570.0, 670.0, 770.0, 870.0, 970.0, 1070.0, 1170.0, 1270.0, 1370.0,
+                            1470.0, 1570.0, 1670.0, 1770.0, 1870.0, 1970.0, 2500.0, 3000.0, 4000.0, 4500.0, 5000.0, 6000.0, 7000.0, 8000.0, 9000.0, 10000.0])
+    ttau_vals = np.array([2.0e-10, 1.3e-6, 4.9e-6, 7.2e-6, 8.5e-6, 8.9e-6, 8.6e-6, 8.2e-6, 7.9e-6, 7.4e-6, 6.8e-6, 6.1e-6, 5.7e-6, 5.1e-6, 4.8e-6,
+                            4.3e-6, 4e-6, 3.7e-6, 3.4e-6, 3.0e-6, 2.8e-6, 1.8e-6, 1.2e-6, 5e-7, 3.3e-7, 2.2e-7, 9e-8, 4e-8, 1.7e-8, 7e-9, 3e-9])
+    ttau_vals *= 1.0
 
-    mset_opts = msett(datadir)
-    cltautau = mset_opts.tautauTheorycl(def_ttau_vals, def_ttau_els, 2, 9000)
+    alphalpha_ells = np.array([1, 10, 65, 100, 210, 235, 270, 355, 385, 420, 520, 580, 650, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000])
+    alphalpha_vals = np.array([0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12, 0.12])
+    alphalpha_vals *= 1.0
 
-    create_map_sets(mset_opts, cmbmaps, 70000, beam_am=0.0, noise_uk_am=0.0, incl_tau=True)
+    sim_map_settings = SimSetupCMB(datadir)
+
+    create_map_sets(
+        sim_map_settings, cmbmaps, 70000, patchy_tau_vals=ttau_vals, patchy_tau_ells=ttau_ells, beam_am=0.0, noise_uk_am=0.0, incl_tau=True, incl_cbfringe=True,
+        alpha_ps_vals=alphalpha_vals, alpha_ps_ells=alphalpha_ells)

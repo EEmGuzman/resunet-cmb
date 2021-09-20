@@ -115,7 +115,7 @@ class msett:
         self.kbeam = flsims.kbeam
         return flsims
 
-def get_flsims_maps(cmbmap_opts, flsims, incltau=False, seed_kappa=None, seed_tau=None):
+def get_flsims_maps(cmbmap_opts, flsims, incltau=False, inclcbfringe=False, seed_kappa=None, seed_tau=None, seed_cbf=None):
     """
     Generate single set of flat-sky CMB simulations from orphics flsims object,
 
@@ -138,38 +138,34 @@ def get_flsims_maps(cmbmap_opts, flsims, incltau=False, seed_kappa=None, seed_ta
     gmaps :
         A dictionary of all the generated simulation maps.
     """
-    out_maps = flsims.get_sim(return_intermediate=True, tauincl=incltau, seed_kappa=seed_kappa, seed_tau=seed_tau)
+    out_maps = flsims.get_sim(return_intermediate=True, tauincl=incltau, cbfringe=inclcbfringe, seed_kappa=seed_kappa, seed_tau=seed_tau, seed_cbf=seed_cbf)
 
-    # shifting the out_maps list if tauincl is True
-    index = 1
-    if incltau:
-        index += 1
+    # possible map outputs
+    base_cmb_maps_returned = ["primordial", "kappa", "lensed", "beamed", "noise_map", "observed"]
+    if incltau and inclcbfringe==False:
+        base_cmb_maps_returned.insert(1, "tau_map")
+    elif inclcbfringe and incltau==False:
+        base_cmb_maps_returned.insert(1, "cbfringe_map")
+    elif inclcbfringe and incltau:
+        base_cmb_maps_returned.insert(1, "tau_map")
+        base_cmb_maps_returned.insert(2, "cbfringe_map")
 
-    # getting phi map
-    unap_tru_phi, _ = lensing.kappa_to_phi(out_maps[index], cmbmap_opts.modlmap, return_fphi=True)
+    gmaps = dict(zip(base_cmb_maps_returned, out_maps))
+    
+    # apodized phi map
+    gmaps["phi"], _ = lensing.kappa_to_phi(gmaps["kappa"], cmbmap_opts.modlmap, return_fphi=True)
 
-    # getting TEB maps
-    intermed_unlTEB = penmap.map2harm(out_maps[0] * cmbmap_opts.taper, iau=True)
-    unlTEB = penmap.ifft(intermed_unlTEB).real
+    # applying apodization
+    for key, value in gmaps.items():
+        if key not in ["noise_map", "beamed"]:
+            gmaps[key] = value * cmbmap_opts.taper
 
-    intermed_lenTEB = penmap.map2harm(out_maps[index + 4] * cmbmap_opts.taper, iau=True)
-    lenTEB = penmap.ifft(intermed_lenTEB).real
+    # FFT to get T,E,B from apod maps
+    intermed_primTEB = penmap.map2harm(gmaps["primordial"], iau=True)
+    gmaps["primTEB"] = penmap.ifft(intermed_primTEB).real
 
-    kappa = out_maps[index] * cmbmap_opts.taper
-    tru_phi = unap_tru_phi * cmbmap_opts.taper
-    observed = out_maps[index + 4] * cmbmap_opts.taper
-    unlensed = out_maps[0] * cmbmap_opts.taper
-    beamed = out_maps[index + 2]
-    noise_map = out_maps[index + 3]
-
-    gmaps = {
-        'unlensed':unlensed, 'kappa':kappa,
-        'beamed':beamed, 'noise_map':noise_map,
-        "observed":observed, "unlTEB":unlTEB,
-        "lenTEB":lenTEB, "phi":tru_phi}
-    if incltau:
-        tau_map = out_maps[1] * cmbmap_opts.taper
-        gmaps["tau_map"] = tau_map
+    intermed_obsTEB = penmap.map2harm(gmaps["observed"], iau=True)
+    gmaps["obsTEB"] = penmap.ifft(intermed_obsTEB).real
     return gmaps
 
 def qest_recon_map(cmbmap_opts, gmaps, pol=True, est='EB'):

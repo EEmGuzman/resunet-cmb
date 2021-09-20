@@ -216,3 +216,72 @@ def ResUNet_CMB(params):
 
     model = keras.models.Model(inputs=[input_img1, input_img2], outputs=[tau_3, unle_3, kappa_3])
     return model
+    
+def ResUNet_CMB_4out(params):
+    """
+    ResUNet-CMB 4-output Network
+
+    Network used in "Reconstructing Cosmic Polarization Rotation with ResUNet-CMB"
+
+    Parameters
+    ----------
+    params:
+        params is a container for the variables defined in the configuration file.
+        An instance of class resunet.utils.Params.
+
+    Returns
+    -------
+    model :
+        model object.
+    """
+
+    input_img1 = Input(shape=(params.imagesize, params.imagesize, 1), dtype=np.float32, name="qlen")
+    input_img2 = Input(shape=(params.imagesize, params.imagesize, 1), dtype=np.float32, name="ulen")
+
+    # encoder
+    enc_0 = keras.layers.Concatenate(axis=3)([input_img1, input_img2])
+    enc_1 = residual_block(enc_0, [64,64], 5, "same", [1,1,1], ["selu","selu"], params.dropval, first_block=True, filters_changed=True)[2]
+    enc_2 = residual_block(enc_1, [64,128], 5, "same", [1,2,2], ["selu","selu"], params.dropval, filters_changed=True)
+    enc_3 = residual_block(enc_2[2], [128,128], 5, "same", [1,1,1], ["selu","selu"], params.dropval)[2]
+
+    # bridge between encoder and decoder
+    enc_dec = residual_block(enc_3, [256,128], 5, "same", [2,2,1], ["selu","selu"], params.dropval, upsample=[False, True, False])[2]
+
+    lskip1 = skip_connection(enc_dec, enc_3)
+    dec_1 = residual_block(lskip1, [128,128], 5, "same", [1,1,1], ["selu","selu"], params.dropval, filters_changed=True)[2]
+    dec_2 = residual_block(dec_1, [64, 64], 5, "same", [2,1,2], ["selu","selu"], params.dropval, upsample=[True, False, True], mid_skip=enc_2[0], filters_changed=True)[2]
+
+    # Block all branches use for final residual connection
+    dec_3 = convolution_block(dec_2, 64, 5, "same", 1, "selu", params.dropval)
+
+    # kappa branch
+    kappa_1 = convolution_block(dec_3, 64, 5, "same", 1, "selu", params.dropval)
+    kappa_res_1 = keras.layers.BatchNormalization()(dec_2)
+    kappa_1 = keras.layers.Add()([kappa_res_1, kappa_1])
+    kappa_2 = convolution_block(kappa_1, 64, 5, "same", 1, "selu", params.dropval)
+    kappa_3 = convolution_block(kappa_2, 1, 5, "same", 1, "linear", params.dropval, name="kappa")
+
+    # primordial E branch
+    unle_1 = convolution_block(dec_3, 64, 5, "same", 1, "selu", params.dropval)
+    unle_res_1 = keras.layers.BatchNormalization()(dec_2)
+    unle_1 = keras.layers.Add()([unle_res_1, unle_1])
+    unle_2 = convolution_block(unle_1, 64, 5, "same", 1, "selu", params.dropval)
+    unle_3 = convolution_block(unle_2, 1, 5, "same", 1, "linear", params.dropval, name="unle")
+
+    # tau branch
+    tau_1 = convolution_block(dec_3, 64, 5, "same", 1, "selu", params.dropval)
+    tau_res_1 = keras.layers.BatchNormalization()(dec_2)
+    tau_1 = keras.layers.Add()([tau_res_1, tau_1])
+    tau_2 = convolution_block(tau_1, 64, 5, "same", 1, "selu", params.dropval)
+    tau_3 = convolution_block(tau_2, 1, 5, "same", 1, "linear", params.dropval, name="tau")
+
+    # alpha branch
+    cbf_1 = convolution_block(dec_3, 64, 5, "same", 1, "selu", params.dropval)
+    cbf_res_1 = keras.layers.BatchNormalization()(dec_2)
+    cbf_1 = keras.layers.Add()([cbf_res_1, cbf_1])
+    cbf_2 = convolution_block(cbf_1, 64, 5, "same", 1, "selu", params.dropval)
+    cbf_3 = convolution_block(cbf_2, 1, 5, "same", 1, "linear", params.dropval, name="cbf")
+
+    model = keras.models.Model(inputs=[input_img1, input_img2], outputs=[tau_3, unle_3, kappa_3, cbf_3])
+    return model
+

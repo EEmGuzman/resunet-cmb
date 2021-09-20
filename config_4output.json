@@ -1,0 +1,28 @@
+{
+    "model_name": "ResUNet_CMB_4out",
+
+    "data_path": "datapipe/map_sets32.npz",
+    "output_dir": "results/run_2/",
+
+    "feat_used": {"qlen":"q_obs", "ulen":"u_obs"},
+    "target_used": {"unle":"e_prim", "tau":"tru_tau", "kappa":"tru_kappa", "cbf":"tru_cbfringe"},
+    "trace_used": ["tru_phi"],
+    "imagesize": 128,
+
+    "optimizer": "Adam",
+    "loss": "mse",
+    "learning_rate": 0.25,
+    "batch_size": 32,
+    "epochs": 500,
+    "haltpatience": 10,
+    "lrpatience": 3,
+    "lrfactordelta": 0.5,
+    "dropval": 0.3,
+
+    "training_split": 0.8,
+    "val_split": 0.1,
+    "test_split": 0.1,
+ 
+    "allocate_vram_an": true,
+    "tensboard_log": false
+}

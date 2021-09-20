@@ -75,6 +75,14 @@ class msett:
         self.theory.loadGenericCls(lvals, self.cltautau, 'tautau', lpad=9000)
         return self.cltautau
 
+    def cbfringeTheorycl(self, binned_theoryspec, binned_theory_ells, des_lmin, des_lmax):
+        # Meant to be in degrees
+        lvals = np.arange(des_lmin,  des_lmax)
+        func_cbfringe = interp1d(binned_theory_ells, binned_theoryspec, kind='linear', fill_value='extrapolate')
+        self.clalphalpha = ((2.*np.pi) * func_cbfringe(lvals)**2) / (lvals**2)
+        self.theory.loadGenericCls(lvals, self.clalphalpha, 'alphalpha', lpad=9000)
+        return self.clalphalpha 
+
     def flat_lens_sim(self, beam_arcmin=0, noise_uk_arcmin=0, noisep="default", pol=True, incl_tau=None, kappa_ps_fac=1):
         """
         Creates orphics object used to produce flat-sky simulations.

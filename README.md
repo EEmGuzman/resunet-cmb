@@ -1,5 +1,5 @@
 # ResUNet-CMB
-This repository contains the implementation of the ResUNet-CMB convolutional neural network from the papers [Reconstructing Patchy Reionization with Deep Learning](https://arxiv.org/abs/2101.01214) and Reconstructing Cosmic Polarization Rotation with ResUNet-CMB. The ResUNet-CMB network is designed for the simultaneous reconstruction of multiple fields that distort the primary CMB fluctuations such as lensing convergence, patchy reionization, and cosmic birefringence from input CMB polarization maps Q and U.
+This repository contains the implementation of the ResUNet-CMB convolutional neural network from the papers [Reconstructing Patchy Reionization with Deep Learning](https://arxiv.org/abs/2101.01214) and [Reconstructing Cosmic Polarization Rotation with ResUNet-CMB](https://arxiv.org/abs/2109.09715). The ResUNet-CMB network is designed for the simultaneous reconstruction of multiple fields that distort the primary CMB fluctuations such as lensing convergence, patchy reionization, and cosmic birefringence from input CMB polarization maps Q and U.
 
 This repository contains code for the production of the CMB simulations used for training and making predictions (data pipeline) and the code used for training the network.
 
@@ -54,7 +54,7 @@ After setting the parameters in the configuration file use
 
     python main.py "config.json"
 
-to train the network. The config_4output.json file is the configuration file used for training the 4-output network from Reconstructing Cosmic Polarization Rotation with ResUNet-CMB.
+to train the network. The config_4output.json file is the configuration file used for training the 4-output network from [Reconstructing Cosmic Polarization Rotation with ResUNet-CMB](https://arxiv.org/abs/2109.09715).
 
 ## Evaluation and Results
 ### This section is based on [Reconstructing Patchy Reionization with Deep Learning](https://arxiv.org/abs/2101.01214)
@@ -67,7 +67,7 @@ Example ResUNet-CMB predictions from fully trained networks for two noise levels
 
 ![](/images/ResUNet-CMB_map_results.png?raw=true)
 
-In this repository we include the fully trained ResUNet-CMB noiseless network that produced some of the results seen above. An example of how to load the pre-trained network and make predictions to achieve similar results is provided in a [Jupyter Notebook](https://github.com/EEmGuzman/resunetcmb/blob/master/trained_networks/example_evaluate_results.ipynb).
+In this repository we include the fully trained ResUNet-CMB noiseless network that produced some of the results seen above. An example of how to load the pre-trained network and make predictions to achieve similar results is provided in a [Jupyter Notebook](https://github.com/EEmGuzman/resunet-cmb/blob/master/trained_networks/example_evaluate_results.ipynb).
 
 It is important to note the pre-trained network included was trained with an extra metric not currently present in the main file, the coefficient of determination.
 

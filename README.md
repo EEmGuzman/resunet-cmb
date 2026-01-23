@@ -1,5 +1,5 @@
 # ResUNet-CMB
-This repository contains the implementation of the ResUNet-CMB convolutional neural network from the papers [Reconstructing Patchy Reionization with Deep Learning](https://arxiv.org/abs/2101.01214) and [Reconstructing Cosmic Polarization Rotation with ResUNet-CMB](https://arxiv.org/abs/2109.09715). The ResUNet-CMB network is designed for the simultaneous reconstruction of multiple fields that distort the primary CMB fluctuations such as lensing convergence, patchy reionization, and cosmic birefringence from input CMB polarization maps Q and U.
+This repository contains the implementation of the ResUNet-CMB convolutional neural network from the papers [Reconstructing Patchy Reionization with Deep Learning](https://arxiv.org/abs/2101.01214), [Reconstructing Cosmic Polarization Rotation with ResUNet-CMB](https://arxiv.org/abs/2109.09715) and [Deep Learning for Primordial _B_-mode Extraction](https://arxiv.org/abs/2512.19577). The ResUNet-CMB network is designed for the simultaneous reconstruction of multiple fields that distort the primary CMB fluctuations such as lensing convergence, patchy reionization, and cosmic birefringence from input CMB polarization maps Q and U.
 
 This repository contains code for the production of the CMB simulations used for training and making predictions (data pipeline) and the code used for training the network.
 
